@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: mariadb:10.7.8-focal
+    container_name: maria_db
+    restart: always
+    ports:
+      - $DB_PORT:3306
+    env_file:
+      - ./envs/mariadb.env
+    volumes:
+      - ./volumes/mariadb:/var/lib/mysql
+
+  db_manager:
+    image: adminer
+    container_name: db_manager
+    depends_on:
+      - db
+    links:
+      - db
+    restart: always
+    ports:
+      - $DB_MANAGER_PORT:8080
+
+  api:
+    build:
+      context: .
+      dockerfile: ./dockerfiles/app.Dockerfile
+    image: $APP_CONTAINER_NAME
+    container_name: app
+    depends_on:
+      - db
+      - db_manager
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - $APP_VOLUMES_SRC:/app
